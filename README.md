@@ -1,56 +1,66 @@
-# Welcome to your Expo app 👋
+# bloom-template
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The Expo scaffold the [Bloom](https://github.com/jsauvain/BloomAssessment) AI
+coding agent clones into a Daytona sandbox at the start of every thread.
+Forked from [`expo/expo-template-default`](https://github.com/expo/expo-template-default)
+(SDK 55, React Native 0.83) and extended with a token-driven design system
+the agent composes against.
 
-## Get started
+## The deal
 
-1. Install dependencies
+The agent generates Mobbin-tier Expo apps from a natural-language prompt plus
+an optional reference image. The reference image is reduced to a `DesignTokens`
+object (palette, typography, motion, layout grammar, surface treatment, …) by a
+vision pass. The agent's job is then to compose **screens** out of token-aware
+primitives — it does not rebuild the design system per app.
 
-   ```bash
-   npm install
-   ```
+That's the contract this template enforces.
 
-2. Start the app
+## What's in the box
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+  app/
+    _layout.tsx        Root: TokenProvider + safe-area + gesture root + stack
+    +html.tsx          Web-only: injects the curated Google Fonts whitelist
+    index.tsx          Warm-canvas placeholder; agent overwrites
+  lib/
+    tokens/
+      types.ts         DesignTokens type (mirrors the Zod schema)
+      defaults.ts      BLOOM_DEFAULT_TOKENS — sage / charcoal / Geist
+      active.ts        The agent overwrites THIS file per thread
+      TokenProvider.tsx
+      index.ts
+    primitives/
+      index.tsx        Surface, Stack, Display, Body, Caption, Press, Sheet,
+                       Field, Icon, Motion, Pill, Divider (12 primitives)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## How the agent uses it
 
-### Other setup steps
+1. The Convex codegen system prompt instructs the agent to call
+   `listFiles("/src/app")` + `readFile("/src/lib/primitives/index.tsx")` first.
+2. The agent writes the chosen `DesignTokens` once to `src/lib/tokens/active.ts`.
+3. The agent writes screen files under `src/app/` composed from `@/lib/primitives`.
+4. Metro hot-reloads, the Daytona preview URL reflects the change.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The single-file write to `active.ts` retheme the whole app — the primitives
+read tokens via `useTokens()`.
 
-## Learn more
+## Why no `expo-font` for the font whitelist
 
-To learn more about developing your project with Expo, look at the following resources:
+Loading a per-font npm package per family in the whitelist is high-friction for
+zero demo benefit. The preview is web-only; injecting one stylesheet `<link>`
+in `+html.tsx` covers all 12 families with no additional deps and no native-only
+side effects.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Run it locally
 
-## Join the community
+```bash
+pnpm install      # or npm install
+pnpm dev          # expo start --port 3000
+```
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Open `http://localhost:3000` in a browser. The warm-canvas placeholder renders
+with the Bloom default theme. To preview a different theme without running the
+agent, edit `src/lib/tokens/active.ts` and watch fast refresh.

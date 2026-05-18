@@ -1,16 +1,26 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import React from 'react';
-import { useColorScheme } from 'react-native';
+// Root layout. The agent edits THIS file to set the navigation shell
+// (bottom-tabs / drawer / stack-only / custom-floating). TokenProvider must
+// stay outermost so every shell reads from useTokens().
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TokenProvider, useTokens } from '@/lib/tokens';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+function ThemedStatusBar() {
+  const t = useTokens();
+  return <StatusBar style={t.palette.mode === 'dark' ? 'light' : 'dark'} />;
+}
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TokenProvider>
+          <ThemedStatusBar />
+          <Stack screenOptions={{ headerShown: false }} />
+        </TokenProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
