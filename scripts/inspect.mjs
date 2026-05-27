@@ -30,8 +30,13 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const URL = process.env.BLOOM_INSPECT_URL ?? "http://localhost:3000/";
 const SCREENSHOT_PATH = process.env.BLOOM_SCREENSHOT_PATH ?? "/tmp/bloom-shot.png";
-const VIEWPORT_W = 393;
-const VIEWPORT_H = 852;
+// TES-108: ONE canonical device logical size shared across the whole pipeline —
+// the live preview pane (Bloom app PreviewIframe DEVICE_W×DEVICE_H), the /apps
+// card aspect, and this capture viewport all use 390×844 (iPhone 14/15). Keeping
+// them identical means the screenshot the visual critic grades, the persisted
+// gallery thumbnail, and the live phone preview all show the same RN-Web reflow.
+const VIEWPORT_W = 390;
+const VIEWPORT_H = 844;
 const SETTLE_MS = Number(process.env.BLOOM_SETTLE_MS ?? 8000);
 const HARD_TIMEOUT_MS = 30000;
 
