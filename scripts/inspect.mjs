@@ -149,6 +149,20 @@ try {
   await cdp.send("Network.enable", {}, sessionId);
   await cdp.send("Log.enable", {}, sessionId);
 
+  // TES-108: force the rendering viewport to the canonical device size BEFORE
+  // navigation so the captured screenshot matches the live preview pane's
+  // 390px-wide RN-Web reflow. `--window-size` alone does NOT control
+  // `Page.captureScreenshot` dimensions in headless chromium — without an
+  // explicit device-metrics override the capture defaults to ~500px wide,
+  // diverging from the 390px live pane (the app reflows differently, and the
+  // gallery thumbnail then mismatches both the live preview and the 390/844
+  // card box). deviceScaleFactor:2 keeps the thumbnail retina-crisp.
+  await cdp.send(
+    "Emulation.setDeviceMetricsOverride",
+    { width: VIEWPORT_W, height: VIEWPORT_H, deviceScaleFactor: 2, mobile: true },
+    sessionId,
+  );
+
   cdp.on((msg) => {
     if (msg.sessionId !== sessionId) return;
     if (msg.method === "Runtime.exceptionThrown") {
